@@ -32,8 +32,8 @@ public class Ghiseu {
         notifyAll(); 
     }
     /**
-     * Pornește un thread worker care procesează cererile și returnează referința
-     * pentru a putea face join mai târziu. Dacă este deja pornit, returnează
+     * Porneste un thread worker care proceseaza cererile si returneaza referinta
+     * pentru a putea face join mai tarziu. Daca este deja pornit, returneaza
      * thread-ul existent.
      */
     public synchronized Thread proceseazaCereri() {
@@ -49,7 +49,7 @@ public class Ghiseu {
                         try {
                             wait();
                         } catch (InterruptedException e) {
-                            // ieșim din așteptare; bucla verifică flagul
+                            // iesim din asteptare; bucla verifica flagul
                         }
                     }
                     if (!ruleaza) break;
@@ -60,7 +60,7 @@ public class Ghiseu {
 
                 if (Math.random() < 0.2) {
                     inPauza = true;
-                    System.out.println(nume + " de la " + birou.getNume() + " a intrat în pauza de cafea.");
+                    System.out.println(nume + " de la " + birou.getNume() + " a intrat in pauza de cafea.");
                     try {
                         Thread.sleep(5000);
                     } catch (InterruptedException e) { }
@@ -83,7 +83,7 @@ public class Ghiseu {
         return worker;
     }
 
-    /** Oprește worker-ul; sigur de apelat de mai multe ori. */
+    /** Opreste worker-ul; sigur de apelat de mai multe ori. */
     public synchronized void opreste() {
         ruleaza = false;
         if (worker != null) {

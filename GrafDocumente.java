@@ -26,7 +26,7 @@ public class GrafDocumente {
 
     private void dfs(Document curent, Set<Document> vizitat, Set<Document> inStack, List<Document> rezultat) {
         if (inStack.contains(curent)) {
-            throw new RuntimeException("Ciclu detectat în graf! Document: " + curent.getNume());
+            throw new RuntimeException("Ciclu detectat in graf! Document: " + curent.getNume());
         }
 
         if (vizitat.contains(curent)) return;
