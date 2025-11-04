@@ -13,15 +13,6 @@ public class GrafDocumente {
         dependente.get(docFinal).add(docIntermediar);
     }
 
-    // public void adaugaDocument(Document doc) {
-    //     dependente.putIfAbsent(doc, new HashSet<>());
-    // }
-
-    // public void adaugaDepedenta(Document docFinal, Document docIntermediar) {
-    //     dependente.putIfAbsent(docFinal, new HashSet<>());
-    //     dependente.putIfAbsent(docIntermediar, new HashSet<>());
-    //     dependente.get(docFinal).add(docIntermediar);
-    // }
 
     public List<Document> getOrdine(Document tinta) {
         Set<Document> vizitat = new HashSet<>();

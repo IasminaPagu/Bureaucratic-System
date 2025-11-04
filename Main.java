@@ -2,7 +2,7 @@ import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
-        // 1. Cream toate documentele
+
         Document A = new Document("A");
         Document B = new Document("B");
         Document C = new Document("C");
@@ -21,7 +21,6 @@ public class Main {
         Document D2 = new Document("D2");
         Document E2 = new Document("E2");
 
-        // 2. Construim graful de dependențe
         GrafDocumente graf = new GrafDocumente();
         List<Document> toateDocumentele = List.of(
                 A, B, C, D, E,
@@ -42,7 +41,6 @@ public class Main {
         System.out.println("Structura graf:");
         graf.afiseazaGraf();
 
-        // 3. Creăm birouri și ghișee
         List<Birou> birouri = new ArrayList<>();
 
         Birou birou1 = new Birou("Birou A-B",
@@ -61,7 +59,6 @@ public class Main {
         birouri.add(birou2);
         birouri.add(birou3);
 
-        // 4. Ghișee
         Ghiseu g1 = new Ghiseu("Ghiseu A1", birou1);
         Ghiseu g2 = new Ghiseu("Ghiseu A2", birou1);
         Ghiseu g3 = new Ghiseu("Ghiseu C1", birou2);
@@ -72,30 +69,28 @@ public class Main {
         birou2.getGhisee().addAll(List.of(g3, g4));
         birou3.getGhisee().add(g5);
 
-        // 5. Pornim ghișeele
-        g1.proceseazaCereri();
-        g2.proceseazaCereri();
-        g3.proceseazaCereri();
-        g4.proceseazaCereri();
-        g5.proceseazaCereri();
+    // Pornește firele ghiseelor și păstrează-le pentru oprire/join
+    Thread t1 = g1.proceseazaCereri();
+    Thread t2 = g2.proceseazaCereri();
+    Thread t3 = g3.proceseazaCereri();
+    Thread t4 = g4.proceseazaCereri();
+    Thread t5 = g5.proceseazaCereri();
 
-        // 6. Clienți care vor documente A, B, C, D, E
+
         Client client1 = new Client("Ion", A, graf, birouri);
         Client client2 = new Client("Maria", B, graf, birouri);
         Client client3 = new Client("George", C, graf, birouri);
         Client client4 = new Client("Andreea", D, graf, birouri);
         Client client5 = new Client("Vasile", E, graf, birouri);
 
-        System.out.println("TEST plan pentru documentul B:");
-        List<Document> testPlan = graf.getOrdine(B);
-        System.out.println(testPlan.stream().map(Document::getNume).toList());
+        // System.out.println("TEST plan pentru documentul B:");
+        // List<Document> testPlan = graf.getOrdine(B);
+        // System.out.println(testPlan.stream().map(Document::getNume).toList());
 
 
-        // 7. Pornim clienții
         List<Client> clienti = List.of(client1, client2, client3, client4, client5);
         clienti.forEach(Thread::start);
 
-        // 8. Așteptăm să termine
         clienti.forEach(c -> {
             try {
                 c.join();
@@ -104,6 +99,14 @@ public class Main {
             }
         });
 
-        System.out.println("=== Simulare incheiata ===");
+        // Oprește ghiseele și așteaptă închiderea lor
+        g1.opreste(); g2.opreste(); g3.opreste(); g4.opreste(); g5.opreste();
+        try {
+            t1.join(); t2.join(); t3.join(); t4.join(); t5.join();
+        } catch (InterruptedException e) {
+            System.out.println("Așteptare ghisee întreruptă.");
+        }
+
+        System.out.println("Sfarsitul programului");
     }
 }

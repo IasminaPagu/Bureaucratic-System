@@ -22,7 +22,7 @@ public class Cerere {
 
     public synchronized void marcheazaRezolvata() {
         this.rezolvata = true;
-        notify(); // trezim clientul care așteaptă
+        notify();
     }
 
     public synchronized void asteaptaRezolvare() {
