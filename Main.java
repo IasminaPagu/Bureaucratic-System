@@ -1,108 +1,104 @@
+import java.nio.file.Path;
 import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
 
-        Document A = new Document("A");
-        Document B = new Document("B");
-        Document C = new Document("C");
-        Document D = new Document("D");
-        Document E = new Document("E");
+        // 1) Citim fisierul de intrare (implicit "sample_input.txt" din folderul proiectului)
+        String inputPath = args != null && args.length > 0 ? args[0] : "sample_input.txt";
+        InputData data;
+        try {
+            data = InputLoader.load(Path.of(inputPath));
+        } catch (Exception e) {
+            System.out.println("Eroare la citirea fisierului '" + inputPath + "': " + e.getMessage());
+            System.out.println("Iesire.");
+            return;
+        }
 
-        Document A1 = new Document("A1");
-        Document B1 = new Document("B1");
-        Document C1 = new Document("C1");
-        Document D1 = new Document("D1");
-        Document E1 = new Document("E1");
+        // 2) Construim documentele
+        Map<String, Document> docByName = new LinkedHashMap<>();
+        // adunam toate numele de documente aparute in dependente, birouri si clienti
+        for (Map.Entry<String, List<String>> e : data.dependente.entrySet()) {
+            docByName.computeIfAbsent(e.getKey(), Document::new);
+            for (String dep : e.getValue()) docByName.computeIfAbsent(dep, Document::new);
+        }
+        for (InputData.BirouSpec b : data.birouri) {
+            for (String d : b.documente) docByName.computeIfAbsent(d, Document::new);
+        }
+        for (InputData.ClientSpec c : data.clienti) {
+            docByName.computeIfAbsent(c.documentFinal, Document::new);
+        }
 
-        Document A2 = new Document("A2");
-        Document B2 = new Document("B2");
-        Document C2 = new Document("C2");
-        Document D2 = new Document("D2");
-        Document E2 = new Document("E2");
-
+        // 3) Construim graful de dependente
         GrafDocumente graf = new GrafDocumente();
-        List<Document> toateDocumentele = List.of(
-                A, B, C, D, E,
-                A1, A2, B1, B2, C1, C2, D1, D2, E1, E2);
-        toateDocumentele.forEach(graf::adaugaDocument);
-
-        graf.adaugaDepedenta(A, A1);
-        graf.adaugaDepedenta(A, A2);
-        graf.adaugaDepedenta(B, B1);
-        graf.adaugaDepedenta(B, B2);
-        graf.adaugaDepedenta(C, C1);
-        graf.adaugaDepedenta(C, C2);
-        graf.adaugaDepedenta(D, D1);
-        graf.adaugaDepedenta(D, D2);
-        graf.adaugaDepedenta(E, E1);
-        graf.adaugaDepedenta(E, E2);
+        for (Document d : docByName.values()) {
+            graf.adaugaDocument(d);
+        }
+        for (Map.Entry<String, List<String>> e : data.dependente.entrySet()) {
+            Document fin = docByName.get(e.getKey());
+            for (String dep : e.getValue()) {
+                graf.adaugaDepedenta(fin, docByName.get(dep));
+            }
+        }
 
         System.out.println("Structura graf:");
         graf.afiseazaGraf();
 
+        // 4) Construim birourile si ghiseele
         List<Birou> birouri = new ArrayList<>();
+        List<Ghiseu> toateGhiseele = new ArrayList<>();
+        for (InputData.BirouSpec b : data.birouri) {
+            Set<Document> docs = new LinkedHashSet<>();
+            for (String dn : b.documente) docs.add(docByName.get(dn));
 
-        Birou birou1 = new Birou("Birou A-B",
-                Set.of(A, A1, A2, B, B1, B2),
-                new ArrayList<>());
+            Birou birou = new Birou(b.nume, docs, new ArrayList<>());
+            birouri.add(birou);
 
-        Birou birou2 = new Birou("Birou C-D",
-                Set.of(C, C1, C2, D, D1, D2),
-                new ArrayList<>());
+            // ghisee
+            if (b.ghisee.isEmpty()) {
+                // fallback: cream un ghiseu implicit daca nu e specificat niciunul
+                Ghiseu g = new Ghiseu("Ghiseu - " + b.nume, birou);
+                birou.getGhisee().add(g);
+                toateGhiseele.add(g);
+            } else {
+                for (String gName : b.ghisee) {
+                    Ghiseu g = new Ghiseu(gName, birou);
+                    birou.getGhisee().add(g);
+                    toateGhiseele.add(g);
+                }
+            }
+        }
 
-        Birou birou3 = new Birou("Birou E",
-                Set.of(E, E1, E2),
-                new ArrayList<>());
+        // 5) Instantiem Supervisorul
+        Supervisor supervisor = new Supervisor(graf, birouri);
 
-        birouri.add(birou1);
-        birouri.add(birou2);
-        birouri.add(birou3);
+        // 6) Pornim ghiseele
+        List<Thread> workerThreads = new ArrayList<>();
+        for (Ghiseu g : toateGhiseele) {
+            workerThreads.add(g.proceseazaCereri());
+        }
 
-    // Instantiem Supervisorul care detine graful si birourile
-    Supervisor supervisor = new Supervisor(graf, birouri);
-
-        Ghiseu g1 = new Ghiseu("Ghiseu A1", birou1);
-        Ghiseu g2 = new Ghiseu("Ghiseu A2", birou1);
-        Ghiseu g3 = new Ghiseu("Ghiseu C1", birou2);
-        Ghiseu g4 = new Ghiseu("Ghiseu C2", birou2);
-        Ghiseu g5 = new Ghiseu("Ghiseu E", birou3);
-
-        birou1.getGhisee().addAll(List.of(g1, g2));
-        birou2.getGhisee().addAll(List.of(g3, g4));
-        birou3.getGhisee().add(g5);
-
-    // Porneste firele ghiseelor si pastreaza-le pentru oprire/join
-        Thread t1 = g1.proceseazaCereri();
-        Thread t2 = g2.proceseazaCereri();
-        Thread t3 = g3.proceseazaCereri();
-        Thread t4 = g4.proceseazaCereri();
-        Thread t5 = g5.proceseazaCereri();
-
-
-    Client client1 = new Client("Ion", A, supervisor);
-    Client client2 = new Client("Maria", B, supervisor);
-    Client client3 = new Client("George", C, supervisor);
-    Client client4 = new Client("Andreea", D, supervisor);
-    Client client5 = new Client("Vasile", E, supervisor);
-
-        List<Client> clienti = List.of(client1, client2, client3, client4, client5);
+        // 7) Cream clientii din fisier si ii pornim
+        List<Client> clienti = new ArrayList<>();
+        for (InputData.ClientSpec c : data.clienti) {
+            Document tinta = docByName.get(c.documentFinal);
+            if (tinta == null) {
+                System.out.println("[WARN] Document inexistent pentru clientul " + c.nume + ": " + c.documentFinal);
+                continue;
+            }
+            clienti.add(new Client(c.nume, tinta, supervisor));
+        }
         clienti.forEach(Thread::start);
 
-        clienti.forEach(c -> {
-            try {
-                c.join();
-            } catch (InterruptedException e) {
-                System.out.println("Thread intrerupt: " + c.getNume());
-            }
-        });
+        // 8) Asteptam clientii sa termine
+        for (Client c : clienti) {
+            try { c.join(); } catch (InterruptedException ignored) {}
+        }
 
-        // Opreste ghiseele si asteapta inchiderea lor
-        g1.opreste(); g2.opreste(); g3.opreste(); g4.opreste(); g5.opreste();
-        try {
-            t1.join(); t2.join(); t3.join(); t4.join(); t5.join();
-        } catch (InterruptedException e) {
-            System.out.println("Asteptare ghisee intrerupta.");
+        // 9) Oprim ghiseele si asteptam inchiderea
+        for (Ghiseu g : toateGhiseele) g.opreste();
+        for (Thread t : workerThreads) {
+            try { t.join(); } catch (InterruptedException ignored) {}
         }
 
         System.out.println("Sfarsitul programului");
