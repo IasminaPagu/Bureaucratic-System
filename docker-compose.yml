@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: biroul-postgres
+    environment:
+      POSTGRES_DB: biroul
+      POSTGRES_USER: biroul_user
+      POSTGRES_PASSWORD: biroul_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - biroul_pgdata:/var/lib/postgresql/data
+
+volumes:
+  biroul_pgdata:
