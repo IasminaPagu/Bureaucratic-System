@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import Tabs from '../components/Tabs';
 import FormField from '../components/FormField';
+import PasswordField from '../components/forms/PasswordField';
+import PasswordRules from '../components/forms/PasswordRules';
 import {
   validateEmail,
   validatePassword,
   validateRequired,
   validatePasswordMatch,
 } from '../utils/validation';
+import { validateStrongPassword, checkPasswordRules } from '../utils/passwordRules';
 import styles from './LoginPage.module.css';
 
 function LoginPage() {
@@ -86,12 +89,13 @@ function LoginPage() {
     const prenumeError = validateRequired(registerForm.prenume, 'Prenumele');
     if (prenumeError) errors.prenume = prenumeError;
 
-    const passwordError = validatePassword(registerForm.password);
+    // Validare parolă puternică pentru register
+    const passwordError = validateStrongPassword(registerForm.password);
     if (passwordError) errors.password = passwordError;
 
-    const confirmPasswordError = validatePassword(registerForm.confirmPassword);
-    if (confirmPasswordError) {
-      errors.confirmPassword = confirmPasswordError;
+    // Verifică dacă parola de confirmare este completată
+    if (!registerForm.confirmPassword || registerForm.confirmPassword.trim() === '') {
+      errors.confirmPassword = 'Confirmarea parolei este obligatorie';
     } else {
       const matchError = validatePasswordMatch(
         registerForm.password,
@@ -217,19 +221,21 @@ function LoginPage() {
                 placeholder="Introduceți prenumele"
               />
 
-              <FormField
+              <PasswordField
                 label="Parolă"
-                type="password"
                 name="password"
                 value={registerForm.password}
                 onChange={handleRegisterChange}
                 error={registerErrors.password}
-                placeholder="Minim 6 caractere"
+                placeholder="Creează o parolă puternică"
               />
 
-              <FormField
+              {registerForm.password && (
+                <PasswordRules rules={checkPasswordRules(registerForm.password)} />
+              )}
+
+              <PasswordField
                 label="Confirmare parolă"
-                type="password"
                 name="confirmPassword"
                 value={registerForm.confirmPassword}
                 onChange={handleRegisterChange}
