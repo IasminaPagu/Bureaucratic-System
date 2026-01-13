@@ -1,73 +1,88 @@
-# React + TypeScript + Vite
+# Biroul.ro - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicație web React + Vite pentru simularea sistemului birocratic românesc.
 
-Currently, two official plugins are available:
+## Structura Proiectului
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+src/
+├── layout/              # Layout-uri partajate
+│   ├── Layout.jsx       # Layout principal cu navbar
+│   └── Layout.module.css
+├── pages/              # Pagini pentru fiecare rută
+│   ├── HomePage.jsx    # Pagina principală (implementată complet)
+│   ├── HomePage.module.css
+│   ├── LoginPage.jsx   # Placeholder autentificare
+│   ├── OfficesPage.jsx # Placeholder lista birouri
+│   ├── ObtainDocumentPage.jsx  # Placeholder obținere document
+│   ├── ObtainedDocumentsPage.jsx # Placeholder documente obținute
+│   └── CommonPage.module.css
+├── routes/             # Configurarea rutelor
+│   └── router.jsx
+├── components/         # Componente refolosibile (pentru viitor)
+├── services/           # Servicii pentru API
+│   └── apiService.js   # Placeholder serviciu API
+├── mocks/              # Date mock pentru dezvoltare
+│   └── mockData.js     # Birouri, documente, dependențe
+└── styles/             # Stiluri globale
+    └── global.css
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Tehnologii
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- **React 19.2** - Library UI
+- **Vite 7.3** - Build tool și dev server
+- **react-router-dom** - Routing SPA
+- **CSS Modules** - Stilizare componentă
+- **JavaScript** (nu TypeScript)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Rulare Aplicație
+
+```bash
+# Instalare dependențe
+npm install
+
+# Pornire server dezvoltare
+npm run dev
+
+# Build pentru producție
+npm build
 ```
+
+Aplicația va rula pe `http://localhost:5173/`
+
+## Rute Disponibile
+
+- `/` - Pagina principală (HomePage)
+- `/login` - Autentificare (placeholder)
+- `/birouri` - Lista birouri publice (placeholder)
+- `/obtinere` - Obținere document nou (placeholder)
+- `/documente` - Documente obținute (placeholder)
+
+## Caracteristici Implementate
+
+✅ Structură modulară cu separarea responsabilităților  
+✅ Routing cu react-router-dom  
+✅ Layout partajat cu navbar  
+✅ Active route highlighting în navbar  
+✅ Pagina principală completă cu informații despre sistem  
+✅ Mock data pentru birouri și documente  
+✅ Serviciu API placeholder pentru integrare viitoare  
+✅ CSS Modules pentru stilizare  
+✅ Toate textele în limba română cu diacritice  
+
+## Note Dezvoltare
+
+- Backend-ul este separat (Spring Boot services)
+- Frontend-ul folosește momentan mock data din `src/mocks/mockData.js`
+- Serviciul API (`src/services/apiService.js`) va fi extins pentru a face apeluri reale
+- Nu se folosesc UI libraries externe (Material-UI, Ant Design, etc.)
+- Stilizarea este făcută cu CSS simplu și CSS Modules
+
+## Următorii Pași
+
+1. Implementarea paginilor placeholder (Login, Birouri, etc.)
+2. Conectarea la backend prin serviciul API
+3. Adăugarea componentelor refolosibile în `src/components/`
+4. Implementarea gestionării stării (Context API sau alt state management)
+5. Adăugarea autentificării și autorizării
