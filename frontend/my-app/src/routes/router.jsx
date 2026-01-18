@@ -5,6 +5,7 @@ import LoginPage from '../pages/LoginPage';
 import OfficesPage from '../pages/OfficesPage';
 import ObtainDocumentPage from '../pages/ObtainDocumentPage';
 import ObtainedDocumentsPage from '../pages/ObtainedDocumentsPage';
+import ProtectedRoute from "./ProtectedRoute";
 
 export const router = createBrowserRouter([
   {
@@ -30,6 +31,14 @@ export const router = createBrowserRouter([
       {
         path: 'documente',
         element: <ObtainedDocumentsPage />,
+      },
+      {
+        path: "documente",
+        element: (
+          <ProtectedRoute>
+            <ObtainedDocumentsPage />
+          </ProtectedRoute>
+        ),
       },
     ],
   },

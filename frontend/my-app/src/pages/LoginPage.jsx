@@ -3,18 +3,28 @@ import Tabs from '../components/Tabs';
 import FormField from '../components/FormField';
 import PasswordField from '../components/forms/PasswordField';
 import PasswordRules from '../components/forms/PasswordRules';
+import { useNavigate } from "react-router-dom";
+import { login as loginApi, register as registerApi } from "../services/authService";
+
 import {
   validateEmail,
   validatePassword,
   validateRequired,
   validatePasswordMatch,
 } from '../utils/validation';
+
 import { validateStrongPassword, checkPasswordRules } from '../utils/passwordRules';
 import styles from './LoginPage.module.css';
 
 function LoginPage() {
+  const navigate = useNavigate();
+
   const [activeTab, setActiveTab] = useState('login');
+
+  // mesaje UI
   const [successMessage, setSuccessMessage] = useState('');
+  const [serverError, setServerError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   // State pentru formularul de conectare
   const [loginForm, setLoginForm] = useState({
@@ -40,9 +50,14 @@ function LoginPage() {
     { id: 'register', label: 'Creare cont' },
   ];
 
+  const resetMessages = () => {
+    setSuccessMessage('');
+    setServerError('');
+  };
+
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
-    setSuccessMessage('');
+    resetMessages();
     setLoginErrors({});
     setRegisterErrors({});
   };
@@ -50,7 +65,7 @@ function LoginPage() {
   const handleLoginChange = (e) => {
     const { name, value } = e.target;
     setLoginForm((prev) => ({ ...prev, [name]: value }));
-    // Șterge eroarea pentru câmpul modificat
+
     if (loginErrors[name]) {
       setLoginErrors((prev) => ({ ...prev, [name]: null }));
     }
@@ -59,7 +74,7 @@ function LoginPage() {
   const handleRegisterChange = (e) => {
     const { name, value } = e.target;
     setRegisterForm((prev) => ({ ...prev, [name]: value }));
-    // Șterge eroarea pentru câmpul modificat
+
     if (registerErrors[name]) {
       setRegisterErrors((prev) => ({ ...prev, [name]: null }));
     }
@@ -93,7 +108,7 @@ function LoginPage() {
     const passwordError = validateStrongPassword(registerForm.password);
     if (passwordError) errors.password = passwordError;
 
-    // Verifică dacă parola de confirmare este completată
+    // Confirmare parolă obligatorie + match
     if (!registerForm.confirmPassword || registerForm.confirmPassword.trim() === '') {
       errors.confirmPassword = 'Confirmarea parolei este obligatorie';
     } else {
@@ -107,46 +122,73 @@ function LoginPage() {
     return errors;
   };
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    setSuccessMessage('');
+    resetMessages();
 
     const errors = validateLoginForm();
-
     if (Object.keys(errors).length > 0) {
       setLoginErrors(errors);
       return;
     }
 
-    // Simulare autentificare reușită
-    console.log('Autentificare cu:', loginForm);
-    setSuccessMessage('Autentificare reușită! Bine ai revenit.');
-    setLoginForm({ email: '', password: '' });
-    setLoginErrors({});
+    try {
+      setLoading(true);
+
+      await loginApi(loginForm.email, loginForm.password);
+
+      setSuccessMessage('Autentificare reușită! Bine ai revenit.');
+      setLoginErrors({});
+      setLoginForm({ email: '', password: '' });
+
+      // redirect după login
+      navigate('/', { replace: true });
+    } catch (err) {
+      setServerError(err?.message || 'Autentificare eșuată.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRegisterSubmit = (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    setSuccessMessage('');
+    resetMessages();
 
     const errors = validateRegisterForm();
-
     if (Object.keys(errors).length > 0) {
       setRegisterErrors(errors);
       return;
     }
 
-    // Simulare creare cont reușită
-    console.log('Creare cont cu:', registerForm);
-    setSuccessMessage('Contul a fost creat cu succes! Bine ai venit.');
-    setRegisterForm({
-      email: '',
-      nume: '',
-      prenume: '',
-      password: '',
-      confirmPassword: '',
-    });
-    setRegisterErrors({});
+    try {
+      setLoading(true);
+
+      // Trimitem confirmPassword, iar authService îl mapează în passwordConfirm pentru backend
+      await registerApi({
+        email: registerForm.email,
+        password: registerForm.password,
+        confirmPassword: registerForm.confirmPassword,
+        nume: registerForm.nume,
+        prenume: registerForm.prenume,
+      });
+
+      setSuccessMessage('Contul a fost creat cu succes! Te poți autentifica acum.');
+      setRegisterErrors({});
+
+      setRegisterForm({
+        email: '',
+        nume: '',
+        prenume: '',
+        password: '',
+        confirmPassword: '',
+      });
+
+      setActiveTab('login');
+    } catch (err) {
+      setServerError(err?.message || 'Crearea contului a eșuat.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -157,8 +199,16 @@ function LoginPage() {
         <div className={styles.card}>
           <Tabs tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
 
+          {serverError && (
+            <div className={styles.errorMessage}>
+              {serverError}
+            </div>
+          )}
+
           {successMessage && (
-            <div className={styles.successMessage}>{successMessage}</div>
+            <div className={styles.successMessage}>
+              {successMessage}
+            </div>
           )}
 
           {activeTab === 'login' && (
@@ -183,8 +233,12 @@ function LoginPage() {
                 placeholder="Introduceți parola"
               />
 
-              <button type="submit" className={styles.submitButton}>
-                Conectare
+              <button
+                type="submit"
+                className={styles.submitButton}
+                disabled={loading}
+              >
+                {loading ? 'Se conectează...' : 'Conectare'}
               </button>
             </form>
           )}
@@ -243,8 +297,12 @@ function LoginPage() {
                 placeholder="Reintroduceți parola"
               />
 
-              <button type="submit" className={styles.submitButton}>
-                Creare cont
+              <button
+                type="submit"
+                className={styles.submitButton}
+                disabled={loading}
+              >
+                {loading ? 'Se creează contul...' : 'Creare cont'}
               </button>
             </form>
           )}
